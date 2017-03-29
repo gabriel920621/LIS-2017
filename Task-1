@@ -1,0 +1,42 @@
+format long
+
+train=csvread('train.csv',1,1);
+test=csvread('test.csv',1,1);
+sample=csvread('sample.csv',1,0);
+
+X = train(:,2:end);
+y = train(:,1);
+
+%% Linear Regression
+w_LinReg = inv(X'*X)*X'*y;
+RMSE_LinReg = sqrt(mean((y-X*w_LinReg).^2));
+
+X_test = test;
+y_pred_LinReg = X_test*w_LinReg;
+
+y_pred_LinReg = [sample(:,1) y_pred_LinReg];
+y_pred_LinReg = [111 111; y_pred_LinReg];
+
+csvwrite('prediction1.csv',y_pred_LinReg);
+
+
+%% Ridge Regression
+d=size(X);
+w_RidReg=@(lambda) inv(X'*X+lambda.*eye(d(2)))*X'*y;
+RMSE_RidReg=@(lambda) sqrt(mean((y-X*w_RidReg(lambda)).^2));
+%[lambda_opt,RMSE_opt]=fminbnd(RMSE,0,10000000);
+[lambda_opt,RMSE_opt]=fmincon(RMSE,1,-1,0);
+
+%w(lambda_opt)
+%RMSE_opt
+%RMSE(lambda_opt)
+
+y_pred_RidReg = X_test*w_RidReg(lambda_opt);
+
+y_pred_RidReg = [sample(:,1) y_pred_RidReg];
+y_pred_RidReg = [111 111; y_pred_RidReg];
+
+csvwrite('prediction2.csv',y_pred_RidReg);
+
+%%
+%mean(y_pred_LinReg-y_pred_RidReg)
